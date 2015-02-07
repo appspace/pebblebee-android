@@ -70,7 +70,6 @@ public class TestActivity extends ActionBarActivity {
         });
 
         PebbleKit.registerPebbleConnectedReceiver(getApplicationContext(), new BroadcastReceiver() {
-
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.i(getLocalClassName(), "Pebble connected!");
@@ -88,7 +87,6 @@ public class TestActivity extends ActionBarActivity {
         });
 
         PebbleKit.registerReceivedAckHandler(getApplicationContext(), new PebbleKit.PebbleAckReceiver(PEBBLE_APP_ID) {
-
             @Override
             public void receiveAck(Context context, int transactionId) {
                 Log.i(getLocalClassName(), "Received ack for transaction " + transactionId);
@@ -105,8 +103,28 @@ public class TestActivity extends ActionBarActivity {
 
         });
 
+        PebbleKit.registerReceivedDataHandler(this, new PebbleKit.PebbleDataReceiver(PEBBLE_APP_ID) {
 
+            @Override
+            public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
+                Long keyCode = data.getInteger(5);
+                Log.i(getLocalClassName(), "Received value=" + keyCode + " for key: 5");
+                switch (keyCode.intValue()) {
+                    case 2 : {
+                        _counter.set(0);
+                        break;
+                    }
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        _debugInfo.setText("Received Button Down command from Pebble");
+                    }
+                });
+                PebbleKit.sendAckToPebble(getApplicationContext(), transactionId);
+            }
 
+        });
 
     }
 
