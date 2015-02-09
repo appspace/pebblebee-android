@@ -30,6 +30,7 @@ public class EcobeeAPIService extends IntentService {
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_FOO.equals(action)) {
+
                 final String param1 = intent.getStringExtra(EXTRA_PARAM1);
                 final String param2 = intent.getStringExtra(EXTRA_PARAM2);
                 handleActionFoo(param1, param2);

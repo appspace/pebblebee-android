@@ -35,6 +35,9 @@ public class TestActivity extends ActionBarActivity {
     @InjectView(R.id.btnStopWatchapp)
     Button _stopWatchappBtn;
 
+    @InjectView(R.id.btnLinkApp)
+    Button _linkAppBtn;
+
     @InjectView(R.id.txtDebugInfo)
     EditText _debugInfo;
 
@@ -124,6 +127,14 @@ public class TestActivity extends ActionBarActivity {
                 PebbleKit.sendAckToPebble(getApplicationContext(), transactionId);
             }
 
+        });
+
+        _linkAppBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent startLinkActivity = new Intent(TestActivity.this, LinkApplicationActivity.class);
+                startActivity(startLinkActivity);
+            }
         });
 
     }
