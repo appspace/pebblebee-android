@@ -1,16 +1,22 @@
 package ca.appspace.android.pebblebee;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.CountDownTimer;
+import android.os.IBinder;
+import android.os.Messenger;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Chronometer;
 import android.widget.TextView;
-
-import com.squareup.okhttp.internal.Platform;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -19,7 +25,6 @@ import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
-
 
 public class LinkApplicationActivity extends ActionBarActivity {
 
@@ -32,8 +37,8 @@ public class LinkApplicationActivity extends ActionBarActivity {
     @InjectView(R.id.linkCodeTxt)
     TextView _linkCodeTxt;
 
-    @InjectView(R.id.expirationChronometer)
-    Chronometer _expirationChronometer;
+    @InjectView(R.id.expiresInTxt)
+    TextView _expiresInTxt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,14 +46,27 @@ public class LinkApplicationActivity extends ActionBarActivity {
         setContentView(R.layout.activity_link_application);
         ButterKnife.inject(this);
 
-        displayCode();
-    }
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(new ApplicationLinkedEventReceiver() {
+            @Override
+            public void onCodeReceived(AuthorizeResponse response) {
+                displayCode(response.getEcobeePin(), System.currentTimeMillis());
+            }
 
-    private void displayCode() {
+            @Override
+            public void onFailure(String message) {
+                displayError(message);
+            }
+
+            @Override
+            public void onApplicationLinked() {
+
+            }
+        }, new IntentFilter());
+
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-
         long generatedAt = sharedPref.getLong(LINK_CODE_TIMESTAMP, 0);
         String generatedCode = sharedPref.getString(LINK_CODE_VALUE, null);
+
         if ((System.currentTimeMillis() - generatedAt) > EcobeeAPI.PIN_MAX_LIFE) {
             //If pin already expired, throw out the old code
             generatedCode = null;
@@ -58,37 +76,67 @@ public class LinkApplicationActivity extends ActionBarActivity {
             prefsEditor.commit();
         }
 
-        if (generatedCode==null) {
-            _instructionsTxt.setText(getString(R.string.link_code_is_generated));
-            _linkCodeTxt.setText("....");
-            EcobeeAPI api = RemoteServiceFactory.createEcobeeApi(this);
-            api.authorize("ecobeePin", EcobeeAPI.API_KEY, "smartWrite", new Callback<AuthorizeResponse>() {
-                @Override
-                public void success(AuthorizeResponse authorizeResponse, Response response) {
-                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(LinkApplicationActivity.this);
-                    SharedPreferences.Editor prefsEditor = sharedPref.edit();
-                    prefsEditor.putString(LINK_CODE_VALUE, authorizeResponse.getEcobeePin());
-                    prefsEditor.putLong(LINK_CODE_TIMESTAMP, System.currentTimeMillis());
-                    prefsEditor.commit();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            LinkApplicationActivity.this.displayCode();
-                        }
-                    });
+        if (generatedCode!=null) {
+            displayCode(generatedCode, generatedAt);
+        } else {
+            requestNewCode();
+        }
+    }
+
+    private void requestNewCode() {
+        //Start loading code
+        Intent createNewCodeIntent = EcobeeAPIService.createNewLinkCodeReqIntent(this, EcobeeAPI.API_KEY);
+        startService(createNewCodeIntent);
+
+        //Let user know code is being loaded
+        _instructionsTxt.setText(getString(R.string.link_code_is_generated));
+        _linkCodeTxt.setText("....");
+
+
+
+
+        //_instructionsTxt.setText("Unable to connect to Ecobee server. Please check that " +
+        //       "network connection is available");
+
+    }
+
+    private void displayCode(String code, long generatedAt) {
+        //Display code to the user
+        _instructionsTxt.setText(getString(R.string.link_app_description));
+        _linkCodeTxt.setText(code);
+
+        //Save code to preferences
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor prefsEditor = sharedPref.edit();
+        prefsEditor.putString(LINK_CODE_VALUE, code);
+        prefsEditor.putLong(LINK_CODE_TIMESTAMP, System.currentTimeMillis());
+        prefsEditor.commit();
+
+        long timeBeforeLinkExpires = EcobeeAPI.PIN_MAX_LIFE - (System.currentTimeMillis() - generatedAt);
+        new CountDownTimer(timeBeforeLinkExpires, 5000) {
+
+            public void onTick(long millisUntilFinished) {
+                long secondsUntilFinished = millisUntilFinished / 1000;
+                long minutesTillExpires = Math.abs(secondsUntilFinished / 60);
+                secondsUntilFinished = secondsUntilFinished-(minutesTillExpires*60);
+                if (minutesTillExpires>0) {
+                    _expiresInTxt.setText(minutesTillExpires+":"+secondsUntilFinished);
+                } else {
+                    _expiresInTxt.setText(secondsUntilFinished+" seconds");
                 }
 
-                @Override
-                public void failure(RetrofitError error) {
-                    _instructionsTxt.setText("Unable to connect to Ecobee server. Please check that " +
-                            "network connection is avialable");
-                }
-            });
-        } else {
-            _instructionsTxt.setText(getString(R.string.link_app_description));
-            _linkCodeTxt.setText(generatedCode);
-            _expirationChronometer.start();
-        }
+            }
+
+            public void onFinish() {
+                _expiresInTxt.setText("done!");
+            }
+        }.start();
+    }
+
+    private void displayError(String message) {
+        _instructionsTxt.setText(message);
+        _expiresInTxt.setText("");
+        _linkCodeTxt.setText(":-(");
     }
 
 

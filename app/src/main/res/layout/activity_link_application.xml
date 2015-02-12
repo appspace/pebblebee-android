@@ -39,11 +39,14 @@
                 android:text="@string/link_code_expires"
                 android:id="@+id/textView2" />
 
-            <Chronometer
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/expirationChronometer"
-                android:layout_marginLeft="20dp" />
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="..."
+                android:id="@+id/expiresInTxt"
+                android:paddingLeft="20dip" />
+
         </LinearLayout>
 
     </LinearLayout>

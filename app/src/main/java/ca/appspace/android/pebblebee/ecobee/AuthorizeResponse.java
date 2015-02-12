@@ -1,9 +1,14 @@
 package ca.appspace.android.pebblebee.ecobee;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.io.Serializable;
+
 /**
  * Created by eugene on 2015-02-08.
  */
-public class AuthorizeResponse {
+public class AuthorizeResponse implements Serializable {
     /*
         {
     "ecobeePin": "bv29",
@@ -59,4 +64,5 @@ public class AuthorizeResponse {
     public void setInterval(int interval) {
         this.interval = interval;
     }
+
 }
