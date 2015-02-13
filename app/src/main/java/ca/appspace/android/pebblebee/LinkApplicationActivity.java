@@ -40,28 +40,30 @@ public class LinkApplicationActivity extends ActionBarActivity {
     @InjectView(R.id.expiresInTxt)
     TextView _expiresInTxt;
 
+    private final ApplicationLinkedEventReceiver _appLinkCodeReceiver = new ApplicationLinkedEventReceiver() {
+        @Override
+        public void onCodeReceived(AuthorizeResponse response) {
+            displayCode(response.getEcobeePin(), System.currentTimeMillis());
+        }
+
+        @Override
+        public void onFailure(String message) {
+            displayError(message);
+        }
+
+        @Override
+        public void onApplicationLinked() {
+
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_link_application);
         ButterKnife.inject(this);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(new ApplicationLinkedEventReceiver() {
-            @Override
-            public void onCodeReceived(AuthorizeResponse response) {
-                displayCode(response.getEcobeePin(), System.currentTimeMillis());
-            }
-
-            @Override
-            public void onFailure(String message) {
-                displayError(message);
-            }
-
-            @Override
-            public void onApplicationLinked() {
-
-            }
-        }, ApplicationLinkedEventReceiver.getFilter());
+        LocalBroadcastManager.getInstance(this).registerReceiver(_appLinkCodeReceiver, ApplicationLinkedEventReceiver.getFilter());
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         long generatedAt = sharedPref.getLong(LINK_CODE_TIMESTAMP, 0);
@@ -162,5 +164,9 @@ public class LinkApplicationActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(_appLinkCodeReceiver);
+        super.onDestroy();
+    }
 }

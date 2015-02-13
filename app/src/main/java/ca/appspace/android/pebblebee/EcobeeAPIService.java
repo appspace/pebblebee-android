@@ -18,7 +18,6 @@ public class EcobeeAPIService extends IntentService {
     private static final String ACTION_REQUEST_NEW_LINK_CODE = "pebblebee.action.ACTION_REQUEST_NEW_LINK_CODE";
     private static final String ACTION_BAZ = "ca.appspace.android.pebblebee.action.BAZ";
 
-    // TODO: Rename parameters
     private static final String API_KEY = "pebblebee.extra.API_KEY";
     private static final String EXTRA_PARAM2 = "ca.appspace.android.pebblebee.extra.PARAM2";
 
