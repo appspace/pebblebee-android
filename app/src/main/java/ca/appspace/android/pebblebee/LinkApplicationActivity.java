@@ -46,7 +46,7 @@ public class LinkApplicationActivity extends ActionBarActivity {
         setContentView(R.layout.activity_link_application);
         ButterKnife.inject(this);
 
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(new ApplicationLinkedEventReceiver() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(new ApplicationLinkedEventReceiver() {
             @Override
             public void onCodeReceived(AuthorizeResponse response) {
                 displayCode(response.getEcobeePin(), System.currentTimeMillis());
@@ -61,7 +61,7 @@ public class LinkApplicationActivity extends ActionBarActivity {
             public void onApplicationLinked() {
 
             }
-        }, new IntentFilter());
+        }, ApplicationLinkedEventReceiver.getFilter());
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         long generatedAt = sharedPref.getLong(LINK_CODE_TIMESTAMP, 0);

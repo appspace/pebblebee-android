@@ -59,7 +59,7 @@ public class EcobeeAPIService extends IntentService {
                     intent = ApplicationLinkedEventReceiver.createErrorIntent(EcobeeAPIService.this, reason);
                 }
                 if (intent!=null) {
-                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                    LocalBroadcastManager.getInstance(EcobeeAPIService.this).sendBroadcast(intent);
                 }
             }
 
@@ -67,7 +67,7 @@ public class EcobeeAPIService extends IntentService {
             public void failure(RetrofitError error) {
                 String reason = error.getResponse().getReason();
                 Intent intent = ApplicationLinkedEventReceiver.createErrorIntent(EcobeeAPIService.this, reason);
-                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+                LocalBroadcastManager.getInstance(EcobeeAPIService.this).sendBroadcast(intent);
             }
         });
     }

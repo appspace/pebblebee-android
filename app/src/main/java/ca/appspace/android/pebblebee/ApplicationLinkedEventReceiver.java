@@ -36,13 +36,13 @@ public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
     }
 
     public static Intent createErrorIntent(Context context, String message) {
-        Intent intent = new Intent();
+        Intent intent = new Intent(ERROR);
         intent.putExtra(ERROR_MESSAGE, message);
         return intent;
     }
 
     public static Intent createAuthResponseIntent(Context context, AuthorizeResponse code) {
-        Intent intent = new Intent();
+        Intent intent = new Intent(LINK_CODE_RECEIVED);
         intent.putExtra(AUTH_RESPONSE, code);
         return intent;
     }
@@ -50,6 +50,7 @@ public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
     public static IntentFilter getFilter() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(LINK_CODE_RECEIVED);
+        filter.addAction(ERROR);
         return filter;
     }
 }
