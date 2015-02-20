@@ -84,6 +84,14 @@ public class LinkApplicationActivity extends ActionBarActivity {
 
         if (generatedCode!=null) {
             displayCode(generatedCode, generatedAt);
+
+            //Fake AuthResponse. Only generatedCode will be used
+            AuthorizeResponse resp = new AuthorizeResponse();
+            resp.setCode(generatedCode);
+            resp.setExpiresIn(Long.valueOf(EcobeeAPI.PIN_MAX_LIFE - (System.currentTimeMillis() - generatedAt)).intValue());
+
+            Intent intent = EcobeeAPIService.createPollIntent(this, resp, EcobeeAPI.API_KEY, EcobeeAPI.PIN_MAX_LIFE);
+            startService(intent);
         } else {
             requestNewCode();
         }

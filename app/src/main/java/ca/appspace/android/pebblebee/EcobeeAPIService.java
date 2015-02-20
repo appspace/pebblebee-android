@@ -18,10 +18,15 @@ import retrofit.client.Response;
 
 public class EcobeeAPIService extends IntentService {
     private static final String TAG = EcobeeAPIService.class.getSimpleName();
-    private static final String ACTION_REQUEST_NEW_LINK_CODE = "pebblebee.action.ACTION_REQUEST_NEW_LINK_CODE";
-    private static final String ACTION_BAZ = "ca.appspace.android.pebblebee.action.BAZ";
 
-    private static final String API_KEY = "pebblebee.extra.API_KEY";
+    private static final int POLL_TIME_BETWEEN_REQUESTS = 30000;
+
+    private static final String ACTION_REQUEST_NEW_LINK_CODE = "pebblebee.action.ACTION_REQUEST_NEW_LINK_CODE";
+    private static final String ACTION_LINK_POLL = "pebblebee.action.ACTION_LINK_POLL";
+
+    private static final String EXTRA_API_KEY = "pebblebee.extra.EXTRA_API_KEY";
+    private static final String EXTRA_AUTH_RESPONSE = "pebblebee.extra.EXTRA_AUTH_RESPONSE";
+    private static final String EXTRA_MAX_POLL_TIME = "pebblebee.extra.EXTRA_MAX_POLL_TIME";
 
     private static final String GRANT_TYPE = "ecobeePin";
 
@@ -30,7 +35,31 @@ public class EcobeeAPIService extends IntentService {
     public static Intent createNewLinkCodeReqIntent(Context context, String apiKey) {
         Intent intent = new Intent(context, EcobeeAPIService.class);
         intent.setAction(ACTION_REQUEST_NEW_LINK_CODE);
-        intent.putExtra(API_KEY, apiKey);
+        intent.putExtra(EXTRA_API_KEY, apiKey);
+        return intent;
+    }
+
+    /**
+     * Creates an intent for polling ecobee service with authCode obtained from
+     * new link code request. Polling will continue every __ seconds but no longer
+     * then for pollForMs timeout.
+     * @param context
+     * @param authResponse
+     * @param apiKey
+     * @param pollForMs maximum time until polling stops. Zero or negative values will
+     *                  result in only one poll request. Maximum value should not exceed
+     *                  token timeout (10 minutes).
+     * @return
+     */
+    public static Intent createPollIntent(Context context, AuthorizeResponse authResponse,
+                                          String apiKey, long pollForMs) {
+        Intent intent = new Intent(context, EcobeeAPIService.class);
+        intent.setAction(ACTION_LINK_POLL);
+        intent.putExtra(EXTRA_AUTH_RESPONSE, authResponse);
+        intent.putExtra(EXTRA_API_KEY, apiKey);
+        if (pollForMs>0 && pollForMs<EcobeeAPI.PIN_MAX_LIFE) {
+            intent.putExtra(EXTRA_MAX_POLL_TIME, pollForMs);
+        }
         return intent;
     }
 
@@ -48,9 +77,22 @@ public class EcobeeAPIService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_REQUEST_NEW_LINK_CODE.equals(action)) {
-                final String appCode = intent.getStringExtra(API_KEY);
-                requestNewCode(appCode);
+            switch (action) {
+                case ACTION_LINK_POLL : {
+                    final AuthorizeResponse authResponse = (AuthorizeResponse) intent.getSerializableExtra(EXTRA_AUTH_RESPONSE);
+                    final String apiKey = intent.getStringExtra(EXTRA_API_KEY);
+                    long maxTime = intent.getLongExtra(EXTRA_MAX_POLL_TIME, 0);
+                    if (maxTime<1 || maxTime>EcobeeAPI.PIN_MAX_LIFE) {
+                        maxTime = 0;
+                    }
+                    startLinkPoll(authResponse, apiKey, maxTime);
+                    break;
+                }
+                case ACTION_REQUEST_NEW_LINK_CODE : {
+                    final String appCode = intent.getStringExtra(EXTRA_API_KEY);
+                    requestNewCode(appCode);
+                    break;
+                }
             }
         }
     }
@@ -64,7 +106,7 @@ public class EcobeeAPIService extends IntentService {
                 if (response.getStatus()== HttpStatus.SC_OK && authorizeResponse!=null) {
                     intent = ApplicationLinkedEventReceiver.createAuthResponseIntent(EcobeeAPIService.this, authorizeResponse);
                     //Received successful response, so let's poll ecobee for information if user has entered the code
-                    startLinkPoll(authorizeResponse, developerCode);
+                    startLinkPoll(authorizeResponse, developerCode, EcobeeAPI.PIN_MAX_LIFE);
                 } else {
                     String reason = response.getReason();
                     intent = ApplicationLinkedEventReceiver.createErrorIntent(EcobeeAPIService.this, reason);
@@ -83,34 +125,42 @@ public class EcobeeAPIService extends IntentService {
         });
     }
 
-    private void startLinkPoll(final AuthorizeResponse authorizeResponse, final String developerCode) {
-        new CountDownTimer(EcobeeAPI.PIN_MAX_LIFE, 1000) {
-            public void onTick(long millisUntilFinished) {
-                _api.token(GRANT_TYPE, authorizeResponse.getCode(), developerCode, new Callback<TokenResponse>() {
-                    @Override
-                    public void success(TokenResponse tokenResponse, Response response) {
-                        Intent intent = null;
-                        if (response.getStatus()== HttpStatus.SC_OK && tokenResponse!=null) {
-                            intent = ApplicationLinkedEventReceiver.createAppLinkedIntent(EcobeeAPIService.this, tokenResponse);
-                        } else {
-                            Log.d(TAG, "Error on checking if app is linked: "+response.getReason());
-                        }
-                        if (intent!=null) {
-                            LocalBroadcastManager.getInstance(EcobeeAPIService.this).sendBroadcast(intent);
-                        }
-                    }
+    private void startLinkPoll(final AuthorizeResponse authorizeResponse, final String developerCode, final long maxTime) {
+        if (maxTime>0) {
+            new CountDownTimer(maxTime, POLL_TIME_BETWEEN_REQUESTS) {
+                public void onTick(long millisUntilFinished) {
+                    runSinglePollRequest(authorizeResponse, developerCode);
+                }
 
-                    @Override
-                    public void failure(RetrofitError error) {
-                        Log.d(TAG, "Error on checking if app is linked: "+error.getResponse().getReason());
-                    }
-                });
+                public void onFinish() {
+
+                }
+            }.start();
+        } else {
+            runSinglePollRequest(authorizeResponse, developerCode);
+        }
+    }
+
+    private void runSinglePollRequest(final AuthorizeResponse authorizeResponse, final String developerCode) {
+        _api.token(GRANT_TYPE, authorizeResponse.getCode(), developerCode, new Callback<TokenResponse>() {
+            @Override
+            public void success(TokenResponse tokenResponse, Response response) {
+                Intent intent = null;
+                if (response.getStatus() == HttpStatus.SC_OK && tokenResponse != null) {
+                    intent = ApplicationLinkedEventReceiver.createAppLinkedIntent(EcobeeAPIService.this, tokenResponse);
+                } else {
+                    Log.d(TAG, "Error on checking if app is linked: " + response.getReason());
+                }
+                if (intent != null) {
+                    LocalBroadcastManager.getInstance(EcobeeAPIService.this).sendBroadcast(intent);
+                }
             }
 
-            public void onFinish() {
-
+            @Override
+            public void failure(RetrofitError error) {
+                Log.d(TAG, "Error on checking if app is linked: " + error.getResponse().getReason());
             }
-        }.start();
+        });
     }
 
 }

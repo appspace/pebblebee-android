@@ -1,6 +1,7 @@
 package ca.appspace.android.pebblebee;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -15,6 +16,8 @@ import retrofit.converter.GsonConverter;
  */
 public class RemoteServiceFactory {
 
+    private final static String TAG = RemoteServiceFactory.class.getSimpleName();
+
     private final static String CLIENT_ID = "mobile";
     private final static String SERVER_ADDR = "https://api.ecobee.com";
 
@@ -28,6 +31,12 @@ public class RemoteServiceFactory {
                 .setConverter(new GsonConverter(gson))
                 .setEndpoint(SERVER_ADDR)
                 .setLogLevel(RestAdapter.LogLevel.FULL)
+                .setLog(new RestAdapter.Log() {
+                    @Override
+                    public void log(String message) {
+                        Log.d(TAG, message);
+                    }
+                })
                 .build();
         return restAdapter.create(EcobeeAPI.class);
     }
