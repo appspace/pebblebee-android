@@ -69,7 +69,7 @@ public class LinkApplicationActivity extends ActionBarActivity {
         long generatedAt = sharedPref.getLong(LINK_CODE_TIMESTAMP, 0);
         String generatedCode = sharedPref.getString(LINK_CODE_VALUE, null);
 
-        if ((System.currentTimeMillis() - generatedAt) > EcobeeAPI.PIN_MAX_LIFE) {
+        if ( EcobeeAPI.PIN_MAX_LIFE <= (System.currentTimeMillis() - generatedAt) ) {
             //If pin already expired, throw out the old code
             generatedCode = null;
             SharedPreferences.Editor prefsEditor = sharedPref.edit();
@@ -115,7 +115,7 @@ public class LinkApplicationActivity extends ActionBarActivity {
         prefsEditor.commit();
 
         long timeBeforeLinkExpires = EcobeeAPI.PIN_MAX_LIFE - (System.currentTimeMillis() - generatedAt);
-        new CountDownTimer(timeBeforeLinkExpires, 5000) {
+        new CountDownTimer(timeBeforeLinkExpires, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 long secondsUntilFinished = millisUntilFinished / 1000;
@@ -126,11 +126,10 @@ public class LinkApplicationActivity extends ActionBarActivity {
                 } else {
                     _expiresInTxt.setText(secondsUntilFinished+" seconds");
                 }
-
             }
 
             public void onFinish() {
-                _expiresInTxt.setText("done!");
+                _expiresInTxt.setText("done!"); //TODO: handle expired code
             }
         }.start();
     }

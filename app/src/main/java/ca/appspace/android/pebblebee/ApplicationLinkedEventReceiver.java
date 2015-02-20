@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 
 import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
+import ca.appspace.android.pebblebee.ecobee.TokenResponse;
 
 public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
 
@@ -14,9 +15,11 @@ public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
     public abstract void onApplicationLinked();
 
     private static final String AUTH_RESPONSE = "pebblebee.extra.AUTH_RESPONSE";
+    private static final String TOKEN = "pebblebee.extra.TOKEN";
     private static final String ERROR_MESSAGE = "pebblebee.extra.ERROR_MESSAGE";
 
     private final static String LINK_CODE_RECEIVED = "pebblebee.action.LINK_CODE_RECEIVED";
+    private final static String APP_LINKED = "pebblebee.action.APP_LINKED";
     private final static String ERROR = "pebblebee.action.ERROR";
 
     @Override
@@ -38,6 +41,12 @@ public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
     public static Intent createErrorIntent(Context context, String message) {
         Intent intent = new Intent(ERROR);
         intent.putExtra(ERROR_MESSAGE, message);
+        return intent;
+    }
+
+    public static Intent createAppLinkedIntent(Context context, TokenResponse token) {
+        Intent intent = new Intent(APP_LINKED);
+        intent.putExtra(TOKEN, token);
         return intent;
     }
 

@@ -1,13 +1,9 @@
 package ca.appspace.android.pebblebee;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import org.apache.http.client.HttpClient;
 
 import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
 import retrofit.RestAdapter;

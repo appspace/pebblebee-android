@@ -49,11 +49,11 @@ public class AuthorizeResponse implements Serializable {
         this.scope = scope;
     }
 
-    public int getExpires_in() {
+    public int getExpiresIn() {
         return expires_in;
     }
 
-    public void setExpires_in(int expires_in) {
+    public void setExpiresIn(int expires_in) {
         this.expires_in = expires_in;
     }
 

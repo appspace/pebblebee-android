@@ -2,6 +2,7 @@ package ca.appspace.android.pebblebee.ecobee;
 
 import retrofit.Callback;
 import retrofit.http.GET;
+import retrofit.http.POST;
 import retrofit.http.Path;
 import retrofit.http.Query;
 
@@ -17,5 +18,16 @@ public interface EcobeeAPI {
             @Query("client_id") String clientId,
             @Query("scope") String scope,
             Callback<AuthorizeResponse> callback);
+
+    /*
+        POST https://api.ecobee.com/token?grant_type=ecobeePin&code=AUTHORIZATION_TOKEN&client_id=APP_KEY
+    */
+    @POST("/token")
+    public void token(
+            @Query("grand_type") String grantType,
+            @Query("code") String authCode,
+            @Query("client_id") String clientId,
+            Callback<TokenResponse> callback
+            );
 
 }
