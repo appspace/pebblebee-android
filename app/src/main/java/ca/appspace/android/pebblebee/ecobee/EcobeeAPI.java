@@ -32,6 +32,7 @@ public interface EcobeeAPI {
 
     @GET("/thermostat")
     public void getThermostats(
-            @Query("json") ApiRequest request);
+            @Query("json") ApiRequest request,
+            Callback<ThermostatData> callback);
 
 }
