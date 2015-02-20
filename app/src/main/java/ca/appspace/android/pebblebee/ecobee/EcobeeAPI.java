@@ -30,4 +30,8 @@ public interface EcobeeAPI {
             Callback<TokenResponse> callback
             );
 
+    @GET("/thermostat")
+    public void getThermostats(
+            @Query("json") ApiRequest request);
+
 }
