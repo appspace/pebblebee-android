@@ -24,7 +24,7 @@ public interface EcobeeAPI {
     */
     @POST("/token")
     public void token(
-            @Query("grand_type") String grantType,
+            @Query("grant_type") String grantType,
             @Query("code") String authCode,
             @Query("client_id") String clientId,
             Callback<TokenResponse> callback
