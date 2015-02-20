@@ -13,6 +13,7 @@ import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Chronometer;
@@ -27,6 +28,8 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 public class LinkApplicationActivity extends ActionBarActivity {
+
+    private final static String TAG = LinkApplicationActivity.class.getSimpleName();
 
     private final static String LINK_CODE_VALUE = "LINK_CODE_VALUE";
     private final static String LINK_CODE_TIMESTAMP = "LINK_CODE_TIMESTAMP";
@@ -68,8 +71,9 @@ public class LinkApplicationActivity extends ActionBarActivity {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         long generatedAt = sharedPref.getLong(LINK_CODE_TIMESTAMP, 0);
         String generatedCode = sharedPref.getString(LINK_CODE_VALUE, null);
-
+        Log.d(TAG, "Link code "+generatedCode+" generated at "+generatedAt+" loaded");
         if ( EcobeeAPI.PIN_MAX_LIFE <= (System.currentTimeMillis() - generatedAt) ) {
+            Log.d(TAG, "Link code "+generatedCode+" is expired");
             //If pin already expired, throw out the old code
             generatedCode = null;
             SharedPreferences.Editor prefsEditor = sharedPref.edit();
@@ -86,6 +90,7 @@ public class LinkApplicationActivity extends ActionBarActivity {
     }
 
     private void requestNewCode() {
+        Log.d(TAG, "Requesting new link code");
         //Start loading code
         Intent createNewCodeIntent = EcobeeAPIService.createNewLinkCodeReqIntent(this, EcobeeAPI.API_KEY);
         startService(createNewCodeIntent);
@@ -94,15 +99,13 @@ public class LinkApplicationActivity extends ActionBarActivity {
         _instructionsTxt.setText(getString(R.string.link_code_is_generated));
         _linkCodeTxt.setText("....");
 
-
-
-
         //_instructionsTxt.setText("Unable to connect to Ecobee server. Please check that " +
         //       "network connection is available");
 
     }
 
     private void displayCode(String code, long generatedAt) {
+        Log.d(TAG, "Displaying code "+code+" generated at "+generatedAt);
         //Display code to the user
         _instructionsTxt.setText(getString(R.string.link_app_description));
         _linkCodeTxt.setText(code);
@@ -115,6 +118,7 @@ public class LinkApplicationActivity extends ActionBarActivity {
         prefsEditor.commit();
 
         long timeBeforeLinkExpires = EcobeeAPI.PIN_MAX_LIFE - (System.currentTimeMillis() - generatedAt);
+        Log.d(TAG, "Code "+code+" expires in "+timeBeforeLinkExpires+" ms");
         new CountDownTimer(timeBeforeLinkExpires, 1000) {
 
             public void onTick(long millisUntilFinished) {
