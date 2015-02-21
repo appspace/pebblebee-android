@@ -3,6 +3,8 @@ package ca.appspace.android.pebblebee;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,7 +26,8 @@ import butterknife.InjectView;
 
 public class TestActivity extends ActionBarActivity {
 
-    private final static UUID PEBBLE_APP_ID = UUID.fromString("1fd52557-d796-4489-bdc7-cdd100c95d16");
+	private final static String TAG = TestActivity.class.getSimpleName();
+
 
     @InjectView(R.id.btnStartWatchapp)
     Button _startWatchappBtn;
@@ -52,14 +55,14 @@ public class TestActivity extends ActionBarActivity {
         _startWatchappBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PebbleKit.startAppOnPebble(getApplicationContext(), PEBBLE_APP_ID);
+                PebbleKit.startAppOnPebble(getApplicationContext(), ApplicationPreferences.PEBBLE_APP_ID);
             }
         });
 
         _stopWatchappBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PebbleKit.closeAppOnPebble(getApplicationContext(), PEBBLE_APP_ID);
+                PebbleKit.closeAppOnPebble(getApplicationContext(), ApplicationPreferences.PEBBLE_APP_ID);
             }
         });
 
@@ -68,7 +71,7 @@ public class TestActivity extends ActionBarActivity {
             public void onClick(View v) {
                 PebbleDictionary data = new PebbleDictionary();
                 data.addInt32(5, _counter.incrementAndGet());
-                PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_ID, data);
+                PebbleKit.sendDataToPebble(getApplicationContext(), ApplicationPreferences.PEBBLE_APP_ID, data);
             }
         });
 
@@ -89,7 +92,8 @@ public class TestActivity extends ActionBarActivity {
 
         });
 
-        PebbleKit.registerReceivedAckHandler(getApplicationContext(), new PebbleKit.PebbleAckReceiver(PEBBLE_APP_ID) {
+        PebbleKit.registerReceivedAckHandler(getApplicationContext(),
+		        new PebbleKit.PebbleAckReceiver(ApplicationPreferences.PEBBLE_APP_ID) {
             @Override
             public void receiveAck(Context context, int transactionId) {
                 Log.i(getLocalClassName(), "Received ack for transaction " + transactionId);
@@ -97,8 +101,8 @@ public class TestActivity extends ActionBarActivity {
 
         });
 
-        PebbleKit.registerReceivedNackHandler(getApplicationContext(), new PebbleKit.PebbleNackReceiver(PEBBLE_APP_ID) {
-
+        PebbleKit.registerReceivedNackHandler(getApplicationContext(),
+		        new PebbleKit.PebbleNackReceiver(ApplicationPreferences.PEBBLE_APP_ID) {
             @Override
             public void receiveNack(Context context, int transactionId) {
                 Log.i(getLocalClassName(), "Received nack for transaction " + transactionId);
@@ -106,8 +110,8 @@ public class TestActivity extends ActionBarActivity {
 
         });
 
-        PebbleKit.registerReceivedDataHandler(this, new PebbleKit.PebbleDataReceiver(PEBBLE_APP_ID) {
-
+        PebbleKit.registerReceivedDataHandler(this,
+		        new PebbleKit.PebbleDataReceiver(ApplicationPreferences.PEBBLE_APP_ID) {
             @Override
             public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
                 Long keyCode = data.getInteger(5);
@@ -129,13 +133,25 @@ public class TestActivity extends ActionBarActivity {
 
         });
 
-        _linkAppBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent startLinkActivity = new Intent(TestActivity.this, LinkApplicationActivity.class);
-                startActivity(startLinkActivity);
-            }
-        });
+	    String oauthCode = PreferenceManager.getDefaultSharedPreferences(this).getString(ApplicationPreferences.KEY_OAUTH_REFRESH_CODE, null);
+	    Log.d(TAG, "OAuth refresh code loaded from preferences: "+oauthCode);
+		if (oauthCode!=null && !oauthCode.trim().isEmpty()) {
+			Log.d(TAG, "OAuth code available, continuing to ThermostatActivity.");
+			_linkAppBtn.setVisibility(View.INVISIBLE);
+			_linkAppBtn.setEnabled(false);
+			startActivity(new Intent(this, ThermostatsActivity.class));
+		} else {
+			Log.d(TAG, "OAuth code is not available, application is not linked.");
+			_linkAppBtn.setVisibility(View.VISIBLE);
+			_linkAppBtn.setEnabled(true);
+			_linkAppBtn.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Intent startLinkActivity = new Intent(TestActivity.this, LinkApplicationActivity.class);
+					startActivity(startLinkActivity);
+				}
+			});
+		}
 
     }
 

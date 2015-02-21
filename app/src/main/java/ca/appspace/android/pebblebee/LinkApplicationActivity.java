@@ -1,31 +1,22 @@
 package ca.appspace.android.pebblebee;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.CountDownTimer;
-import android.os.IBinder;
-import android.os.Messenger;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Chronometer;
 import android.widget.TextView;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
 import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
+import ca.appspace.android.pebblebee.ecobee.TokenResponse;
 
 public class LinkApplicationActivity extends ActionBarActivity {
 
@@ -43,6 +34,8 @@ public class LinkApplicationActivity extends ActionBarActivity {
     @InjectView(R.id.expiresInTxt)
     TextView _expiresInTxt;
 
+    private CountDownTimer _tokenExpirationTimer;
+
     private final ApplicationLinkedEventReceiver _appLinkCodeReceiver = new ApplicationLinkedEventReceiver() {
         @Override
         public void onCodeReceived(AuthorizeResponse response) {
@@ -51,12 +44,12 @@ public class LinkApplicationActivity extends ActionBarActivity {
 
         @Override
         public void onFailure(String message) {
-            displayError(message);
+            handleError(message);
         }
 
         @Override
-        public void onApplicationLinked() {
-
+        public void onApplicationLinked(TokenResponse token) {
+            handleApplicationLinked(token);
         }
     };
 
@@ -97,6 +90,24 @@ public class LinkApplicationActivity extends ActionBarActivity {
         }
     }
 
+	private void handleApplicationLinked(TokenResponse token) {
+		_instructionsTxt.setText(getString(R.string.application_linked));
+		if (_tokenExpirationTimer!=null) {
+			_tokenExpirationTimer.cancel();
+		}
+		_expiresInTxt.setText("");
+		SharedPreferences.Editor prefsEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+		prefsEditor.remove(LINK_CODE_TIMESTAMP);
+		prefsEditor.remove(LINK_CODE_VALUE);
+		prefsEditor.putString(ApplicationPreferences.KEY_OAUTH_CODE, token.getAccessToken());
+		prefsEditor.putString(ApplicationPreferences.KEY_OAUTH_REFRESH_CODE, token.getRefreshToken());
+		prefsEditor.putLong(ApplicationPreferences.KEY_OAUTH_CODE_EXPIRES_IN,
+				System.currentTimeMillis()+(token.getExpiresIn()*60*1000));
+		prefsEditor.commit();
+
+		startActivity(new Intent(this, ThermostatsActivity.class));
+	}
+
     private void requestNewCode() {
         Log.d(TAG, "Requesting new link code");
         //Start loading code
@@ -106,9 +117,6 @@ public class LinkApplicationActivity extends ActionBarActivity {
         //Let user know code is being loaded
         _instructionsTxt.setText(getString(R.string.link_code_is_generated));
         _linkCodeTxt.setText("....");
-
-        //_instructionsTxt.setText("Unable to connect to Ecobee server. Please check that " +
-        //       "network connection is available");
 
     }
 
@@ -127,7 +135,10 @@ public class LinkApplicationActivity extends ActionBarActivity {
 
         long timeBeforeLinkExpires = EcobeeAPI.PIN_MAX_LIFE - (System.currentTimeMillis() - generatedAt);
         Log.d(TAG, "Code "+code+" expires in "+timeBeforeLinkExpires+" ms");
-        new CountDownTimer(timeBeforeLinkExpires, 1000) {
+        if (_tokenExpirationTimer!=null) {  //If previous timer is still in place, cancel it
+            _tokenExpirationTimer.cancel();
+        }
+        _tokenExpirationTimer = new CountDownTimer(timeBeforeLinkExpires, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 long secondsUntilFinished = millisUntilFinished / 1000;
@@ -146,12 +157,16 @@ public class LinkApplicationActivity extends ActionBarActivity {
         }.start();
     }
 
-    private void displayError(String message) {
+    private void handleError(String message) {
+	    SharedPreferences.Editor prefsEditor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+	    prefsEditor.remove(LINK_CODE_TIMESTAMP);
+	    prefsEditor.remove(LINK_CODE_VALUE);
+		prefsEditor.commit();
+
         _instructionsTxt.setText(message);
         _expiresInTxt.setText("");
         _linkCodeTxt.setText(":-(");
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

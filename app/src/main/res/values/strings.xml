@@ -6,6 +6,9 @@
     <string name="title_activity_link_application">Link Application</string>
     <string name="link_app_description">Please use this code to link PebbleBee application to your ecobee thermostat. To do this, log into ecobee web portal at ecobee.com and use the code provided at \'My Apps\' section.</string>
     <string name="link_code_is_generated">Please wait till the application contact Ecobee server to obtain link code.</string>
+    <string name="application_linked">Application is successfully linked!</string>
     <string name="link_code_expires">This code expires in:</string>
+    <string name="title_activity_thermostats">ThermostatsActivity</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>

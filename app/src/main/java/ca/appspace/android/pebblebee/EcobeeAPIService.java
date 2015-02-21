@@ -9,14 +9,21 @@ import android.util.Log;
 
 import org.apache.http.HttpStatus;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.StringWriter;
+
 import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
 import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
 import ca.appspace.android.pebblebee.ecobee.TokenResponse;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import retrofit.mime.TypedInput;
 
 public class EcobeeAPIService extends IntentService {
+
     private static final String TAG = EcobeeAPIService.class.getSimpleName();
 
     private static final int POLL_TIME_BETWEEN_REQUESTS = 30000;
@@ -128,7 +135,14 @@ public class EcobeeAPIService extends IntentService {
     private void startLinkPoll(final AuthorizeResponse authorizeResponse, final String developerCode, final long maxTime) {
         if (maxTime>0) {
             new CountDownTimer(maxTime, POLL_TIME_BETWEEN_REQUESTS) {
+
+	            private boolean firstRun = true;
+
                 public void onTick(long millisUntilFinished) {
+	                if (firstRun) {
+		                firstRun = false;
+		                return;
+	                }
                     runSinglePollRequest(authorizeResponse, developerCode);
                 }
 
@@ -149,6 +163,7 @@ public class EcobeeAPIService extends IntentService {
                 if (response.getStatus() == HttpStatus.SC_OK && tokenResponse != null) {
                     intent = ApplicationLinkedEventReceiver.createAppLinkedIntent(EcobeeAPIService.this, tokenResponse);
                 } else {
+	                intent = ApplicationLinkedEventReceiver.createErrorIntent(EcobeeAPIService.this, response.getReason());
                     Log.d(TAG, "Error on checking if app is linked: " + response.getReason());
                 }
                 if (intent != null) {
@@ -159,6 +174,18 @@ public class EcobeeAPIService extends IntentService {
             @Override
             public void failure(RetrofitError error) {
                 Log.d(TAG, "Error on checking if app is linked: " + error.getResponse().getReason());
+	            /**
+	             * Following comes here, but in error.getResponse().getBody()
+	             *
+	             *     {
+	             "error": "authorization_pending",
+	             "error_descripton": "Waiting for user to authorize application.",
+	             "error_uri": "http://tools.ietf.org/html/draft-ietf-oauth-v2-31#section-5.2"
+	             }
+	             */
+
+	            //Intent intent = ApplicationLinkedEventReceiver.createErrorIntent(EcobeeAPIService.this, error.getResponse().getReason());
+	            //LocalBroadcastManager.getInstance(EcobeeAPIService.this).sendBroadcast(intent);
             }
         });
     }

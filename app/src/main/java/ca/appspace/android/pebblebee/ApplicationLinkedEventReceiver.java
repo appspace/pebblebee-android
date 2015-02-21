@@ -12,7 +12,7 @@ public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
 
     public abstract void onCodeReceived(AuthorizeResponse response);
     public abstract void onFailure(String message);
-    public abstract void onApplicationLinked();
+    public abstract void onApplicationLinked(TokenResponse token);
 
     private static final String AUTH_RESPONSE = "pebblebee.extra.AUTH_RESPONSE";
     private static final String TOKEN = "pebblebee.extra.TOKEN";
@@ -34,7 +34,10 @@ public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
                 onFailure(intent.getExtras().getString(ERROR_MESSAGE));
                 break;
             }
-
+            case APP_LINKED : {
+                onApplicationLinked((TokenResponse) intent.getExtras().getSerializable(TOKEN));
+                break;
+            }
         }
     }
 
@@ -60,6 +63,7 @@ public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
         IntentFilter filter = new IntentFilter();
         filter.addAction(LINK_CODE_RECEIVED);
         filter.addAction(ERROR);
+	    filter.addAction(APP_LINKED);
         return filter;
     }
 }
