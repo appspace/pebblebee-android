@@ -33,6 +33,8 @@ public class LinkApplicationService extends IntentService {
 
     private EcobeeAPI _api;
 
+	private CountDownTimer _linkPollTimer;
+
     public static Intent createNewLinkCodeReqIntent(Context context, String apiKey) {
         Intent intent = new Intent(context, LinkApplicationService.class);
         intent.setAction(ACTION_REQUEST_NEW_LINK_CODE);
@@ -128,7 +130,7 @@ public class LinkApplicationService extends IntentService {
 
     private void startLinkPoll(final AuthorizeResponse authorizeResponse, final String developerCode, final long maxTime) {
         if (maxTime>0) {
-            new CountDownTimer(maxTime, POLL_TIME_BETWEEN_REQUESTS) {
+	        _linkPollTimer = new CountDownTimer(maxTime, POLL_TIME_BETWEEN_REQUESTS) {
 
 	            private boolean firstRun = true;
 
@@ -160,7 +162,10 @@ public class LinkApplicationService extends IntentService {
 	                intent = ApplicationLinkedEventReceiver.createErrorIntent(LinkApplicationService.this, response.getReason());
                     Log.d(TAG, "Error on checking if app is linked: " + response.getReason());
                 }
-                if (intent != null) {
+                if (_linkPollTimer!=null) {
+	                _linkPollTimer.cancel();
+                }
+	            if (intent != null) {
                     LocalBroadcastManager.getInstance(LinkApplicationService.this).sendBroadcast(intent);
                 }
             }

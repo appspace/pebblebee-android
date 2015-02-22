@@ -73,7 +73,7 @@ public class ThermostatsActivity extends ActionBarActivity {
 		ApiRequest request = new ApiRequest();
 		request.setSelection(new Selection());
 		request.getSelection().setSelectionType(SelectionType.THERMOSTATS);
-		request.getSelection().setSelectionMatch("");
+		request.getSelection().setSelectionMatch("xxxxxxxxxxx");    //<-Id of your thermostat here
 		request.getSelection().setIncludeDevice(true);
 		request.getSelection().setIncludeEvents(true);
 		request.getSelection().setIncludeRuntime(true);

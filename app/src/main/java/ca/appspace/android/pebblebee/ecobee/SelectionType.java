@@ -16,6 +16,10 @@ public enum SelectionType {
         this.textValue = textValue;
     }
 
+	public String asJsonValue() {
+		return textValue;
+	}
+
     @Override
     public String toString() {
         return "SelectionType{" +

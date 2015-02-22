@@ -1,12 +1,14 @@
 package ca.appspace.android.pebblebee.ecobee;
 
+import java.io.Serializable;
+
 import retrofit.Callback;
 import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.Path;
 import retrofit.http.Query;
 
-public interface EcobeeAPI {
+public interface EcobeeAPI<R extends Serializable> {
 
     final static String API_KEY = "anMH4MUjBVKEaUhlum2K315xC6oH4uP2";
     final static long PIN_MAX_LIFE = 10*60*1000;    //10 minutes
@@ -32,7 +34,7 @@ public interface EcobeeAPI {
 
     @GET("/1/thermostat")
     public void getThermostats(
-            @Query("json") ApiRequest request,
+            @Query("json") R request,
             Callback<ThermostatData> callback);
 
 }

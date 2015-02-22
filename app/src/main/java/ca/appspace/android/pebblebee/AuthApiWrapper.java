@@ -7,11 +7,16 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.concurrent.locks.ReentrantLock;
 
 import ca.appspace.android.pebblebee.ecobee.ApiRequest;
 import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
 import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
+import ca.appspace.android.pebblebee.ecobee.SelectionType;
+import ca.appspace.android.pebblebee.ecobee.SelectionTypeJsonAdapter;
 import ca.appspace.android.pebblebee.ecobee.ThermostatData;
 import ca.appspace.android.pebblebee.ecobee.TokenResponse;
 import retrofit.Callback;
@@ -23,7 +28,7 @@ import retrofit.http.Query;
 /**
  * Created by eugene on 2015-02-21.
  */
-public class AuthApiWrapper extends Service implements EcobeeAPI {
+public class AuthApiWrapper extends Service implements EcobeeAPI<ApiRequest> {
 
 	private final static String TAG = AuthApiWrapper.class.getSimpleName();
 
@@ -34,9 +39,12 @@ public class AuthApiWrapper extends Service implements EcobeeAPI {
 	private final IBinder _binder = new LocalBinder();
 
 	private EcobeeAPI _api;
-	private EcobeeAPI _insecuredApi;
+	private EcobeeAPI<String> _insecuredApi;
 
-	private ReentrantLock _oauthRefreshLock = new ReentrantLock();
+	private final static Gson gson = new GsonBuilder()
+			.setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+			.registerTypeAdapter(SelectionType.class, new SelectionTypeJsonAdapter())
+			.create();
 
 	public class LocalBinder extends Binder {
 		AuthApiWrapper getService() {
@@ -57,40 +65,48 @@ public class AuthApiWrapper extends Service implements EcobeeAPI {
 	}
 
 	@Override
-	public void getThermostats(ApiRequest request, Callback<ThermostatData> callback) {
-		refreshTokenIfRequired();
-		_api.getThermostats(request, callback);
+	public void getThermostats(final ApiRequest request, final Callback<ThermostatData> callback) {
+		refreshTokenIfRequired(new Callback<Void>() {
+			@Override
+			public void success(Void aVoid, Response response) {
+				_api.getThermostats(gson.toJson(request), callback);
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				callback.failure(error);
+			}
+		});
 	}
 
-	private void refreshTokenIfRequired() {
+	private void refreshTokenIfRequired(final Callback<Void> tokenReadyCallback) {
 		Log.d(TAG, "Checking if refresh token is required");
 		if (_oauthExpiresIn<1 || System.currentTimeMillis()>_oauthExpiresIn) {
-			_oauthRefreshLock.tryLock();
 			Log.d(TAG, "Requesting new code as previous has expired");
-			_insecuredApi.token("ecobeePin", _oauthRefreshCode, EcobeeAPI.API_KEY, new Callback<TokenResponse>() {
-				@Override
-				public void success(TokenResponse tokenResponse, Response response) {
-					_oauthExpiresIn = System.currentTimeMillis()+tokenResponse.getExpiresIn()*60*1000;
-					_oauthCode = tokenResponse.getAccessToken();
-					_oauthRefreshCode = tokenResponse.getRefreshToken();
-					Log.d(TAG, "New access token loaded: "+_oauthCode);
-					_oauthRefreshLock.unlock();
-				}
-
-				@Override
-				public void failure(RetrofitError error) {
-					Log.e(TAG, "Error refreshing code "+error.getResponse().getReason());
-					_oauthRefreshLock.unlock();
-				}
-			});
-		} else {
-			Log.d(TAG, "Code is still OK for next "+((_oauthExpiresIn-System.currentTimeMillis())/1000)+" seconds");
-		}
-
-		while (_oauthRefreshLock.isLocked()) {
 			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {}
+				_insecuredApi.token("refresh_token", _oauthRefreshCode, EcobeeAPI.API_KEY, new Callback<TokenResponse>() {
+					@Override
+					public void success(TokenResponse tokenResponse, Response response) {
+						_oauthExpiresIn = System.currentTimeMillis() + tokenResponse.getExpiresIn() * 60 * 1000;
+						_oauthCode = tokenResponse.getAccessToken();
+						_oauthRefreshCode = tokenResponse.getRefreshToken();
+						Log.d(TAG, "New access token loaded: " + _oauthCode);
+						if (tokenReadyCallback!=null) tokenReadyCallback.success(null, response);
+					}
+
+					@Override
+					public void failure(RetrofitError error) {
+						Log.e(TAG, "Error refreshing code " + error.getResponse().getReason());
+						if (tokenReadyCallback!=null) tokenReadyCallback.failure(error);
+					}
+				});
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
+				if (tokenReadyCallback!=null) tokenReadyCallback.failure(null);
+			}
+		} else {
+			Log.d(TAG, "Code is still OK for next " + ((_oauthExpiresIn - System.currentTimeMillis()) / 1000) + " seconds");
+			if (tokenReadyCallback!=null) tokenReadyCallback.success(null, null);
 		}
 	}
 
