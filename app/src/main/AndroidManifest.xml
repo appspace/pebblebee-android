@@ -21,9 +21,13 @@
         </activity>
 
         <service
-            android:name=".EcobeeAPIService"
+            android:name=".LinkApplicationService"
             android:exported="false" >
         </service>
+
+        <service android:name=".AuthApiWrapper"
+            android:enabled="true"
+            android:exported="false"></service>
 
         <activity
             android:name=".LinkApplicationActivity"

@@ -8,8 +8,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.TextView;
 
 import butterknife.ButterKnife;
@@ -83,7 +81,7 @@ public class LinkApplicationActivity extends FragmentActivity {
             resp.setCode(generatedCode);
             resp.setExpiresIn(Long.valueOf(EcobeeAPI.PIN_MAX_LIFE - (System.currentTimeMillis() - generatedAt)).intValue());
 
-            Intent intent = EcobeeAPIService.createPollIntent(this, resp, EcobeeAPI.API_KEY, EcobeeAPI.PIN_MAX_LIFE);
+            Intent intent = LinkApplicationService.createPollIntent(this, resp, EcobeeAPI.API_KEY, EcobeeAPI.PIN_MAX_LIFE);
             startService(intent);
         } else {
             requestNewCode();
@@ -111,7 +109,7 @@ public class LinkApplicationActivity extends FragmentActivity {
     private void requestNewCode() {
         Log.d(TAG, "Requesting new link code");
         //Start loading code
-        Intent createNewCodeIntent = EcobeeAPIService.createNewLinkCodeReqIntent(this, EcobeeAPI.API_KEY);
+        Intent createNewCodeIntent = LinkApplicationService.createNewLinkCodeReqIntent(this, EcobeeAPI.API_KEY);
         startService(createNewCodeIntent);
 
         //Let user know code is being loaded

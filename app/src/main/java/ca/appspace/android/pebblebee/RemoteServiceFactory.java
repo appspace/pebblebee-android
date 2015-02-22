@@ -6,7 +6,10 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import ca.appspace.android.pebblebee.ecobee.ApiRequest;
 import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
+import ca.appspace.android.pebblebee.ecobee.Selection;
+import ca.appspace.android.pebblebee.ecobee.SelectionType;
 import retrofit.ErrorHandler;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
@@ -28,6 +31,19 @@ public class RemoteServiceFactory {
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
             .create();
 
+
+	public static void main(String... args) {
+		ApiRequest req = new ApiRequest();
+		req.setSelection(new Selection());
+		req.setSelection(new Selection());
+		req.getSelection().setSelectionType(SelectionType.THERMOSTATS);
+		req.getSelection().setSelectionMatch("");
+		req.getSelection().setIncludeDevice(true);
+		req.getSelection().setIncludeEvents(true);
+		req.getSelection().setIncludeRuntime(true);
+		System.out.println(gson.toJson(req));
+	}
+
     public static EcobeeAPI createEcobeeApi(Context context) {
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setClient(new OkClient())
@@ -35,12 +51,30 @@ public class RemoteServiceFactory {
                 .setEndpoint(SERVER_ADDR)
                 .setLogLevel(RestAdapter.LogLevel.FULL)
                 .setLog(new RestAdapter.Log() {
-                    @Override
-                    public void log(String message) {
-                        Log.d(TAG, message);
-                    }
+	                @Override
+	                public void log(String message) {
+		                Log.d(TAG, message);
+	                }
                 })
                 .build();
         return restAdapter.create(EcobeeAPI.class);
     }
+
+	public static EcobeeAPI createSecuredEcobeeApi(Context context, RequestInterceptor requestInterceptor) {
+		RestAdapter restAdapter = new RestAdapter.Builder()
+				.setClient(new OkClient())
+				.setConverter(new GsonConverter(gson))
+				.setEndpoint(SERVER_ADDR)
+				.setLogLevel(RestAdapter.LogLevel.FULL)
+				.setRequestInterceptor(requestInterceptor)
+				.setLog(new RestAdapter.Log() {
+					@Override
+					public void log(String message) {
+						Log.d(TAG, message);
+					}
+				})
+				.build();
+		return restAdapter.create(EcobeeAPI.class);
+	}
+
 }

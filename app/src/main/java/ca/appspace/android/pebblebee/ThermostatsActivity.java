@@ -1,5 +1,11 @@
 package ca.appspace.android.pebblebee;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +30,8 @@ import retrofit.client.Response;
 public class ThermostatsActivity extends ActionBarActivity {
 
 	private static final String TAG = ThermostatsActivity.class.getSimpleName();
+
+	private AuthApiWrapper _service;
 
 	@InjectView(R.id.layout_thermostats)
 	LinearLayout _thermostatsList;
@@ -59,8 +67,9 @@ public class ThermostatsActivity extends ActionBarActivity {
 	}
 
 	private void reloadThermostats() {
-		EcobeeAPI api = RemoteServiceFactory.createEcobeeApi(this);
-
+		if (_service==null) {
+			Log.w(TAG, "Service is not bound - requests are not available");
+		}
 		ApiRequest request = new ApiRequest();
 		request.setSelection(new Selection());
 		request.getSelection().setSelectionType(SelectionType.THERMOSTATS);
@@ -69,17 +78,44 @@ public class ThermostatsActivity extends ActionBarActivity {
 		request.getSelection().setIncludeEvents(true);
 		request.getSelection().setIncludeRuntime(true);
 
-		api.getThermostats(request, new Callback<ThermostatData>() {
+		_service.getThermostats(request, new Callback<ThermostatData>() {
 			@Override
 			public void success(ThermostatData thermostatData, Response response) {
+
 				Status status = thermostatData.getStatus();
 				Thermostat[] thermostats = thermostatData.getThermostatList();
 			}
 
 			@Override
 			public void failure(RetrofitError error) {
-
+				Log.e(TAG, "Error loading thermostats: "+error.getResponse().getReason());
 			}
 		});
 	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		Intent intent = new Intent(this, AuthApiWrapper.class);
+		bindService(intent, _serviceConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		unbindService(_serviceConnection);
+	}
+
+	private ServiceConnection _serviceConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			_service = ((AuthApiWrapper.LocalBinder)service).getService();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			_service = null;
+		}
+	};
 }
