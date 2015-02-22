@@ -8,7 +8,7 @@
     <string name="link_code_is_generated">Please wait till the application contact Ecobee server to obtain link code.</string>
     <string name="application_linked">Application is successfully linked!</string>
     <string name="link_code_expires">This code expires in:</string>
-    <string name="title_activity_thermostats">ThermostatsActivity</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_thermostats">Your Thermostats</string>
+    <string name="label_reload_thermostats">Reload Thermostats</string>
 
 </resources>

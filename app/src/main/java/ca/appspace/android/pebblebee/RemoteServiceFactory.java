@@ -7,7 +7,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
+import retrofit.ErrorHandler;
+import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
+import retrofit.RetrofitError;
 import retrofit.client.OkClient;
 import retrofit.converter.GsonConverter;
 

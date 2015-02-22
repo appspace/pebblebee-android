@@ -2,15 +2,28 @@ package ca.appspace.android.pebblebee;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import ca.appspace.android.pebblebee.ecobee.ApiRequest;
+import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
+import ca.appspace.android.pebblebee.ecobee.Selection;
+import ca.appspace.android.pebblebee.ecobee.SelectionType;
+import ca.appspace.android.pebblebee.ecobee.Status;
+import ca.appspace.android.pebblebee.ecobee.Thermostat;
+import ca.appspace.android.pebblebee.ecobee.ThermostatData;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 
 public class ThermostatsActivity extends ActionBarActivity {
+
+	private static final String TAG = ThermostatsActivity.class.getSimpleName();
 
 	@InjectView(R.id.layout_thermostats)
 	LinearLayout _thermostatsList;
@@ -32,16 +45,41 @@ public class ThermostatsActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-
-		//noinspection SimplifiableIfStatement
-		if (id == R.id.action_settings) {
-			return true;
+		switch (item.getItemId()) {
+			case R.id.action_settings: {
+				return true;
+			}
+			case R.id.action_reload_thermostats: {
+				Log.d(TAG, "Number of elements in list: "+_thermostatsList.getChildCount());
+				reloadThermostats();
+				return true;
+			}
+			default : return super.onOptionsItemSelected(item);
 		}
+	}
 
-		return super.onOptionsItemSelected(item);
+	private void reloadThermostats() {
+		EcobeeAPI api = RemoteServiceFactory.createEcobeeApi(this);
+
+		ApiRequest request = new ApiRequest();
+		request.setSelection(new Selection());
+		request.getSelection().setSelectionType(SelectionType.THERMOSTATS);
+		request.getSelection().setSelectionMatch("");
+		request.getSelection().setIncludeDevice(true);
+		request.getSelection().setIncludeEvents(true);
+		request.getSelection().setIncludeRuntime(true);
+
+		api.getThermostats(request, new Callback<ThermostatData>() {
+			@Override
+			public void success(ThermostatData thermostatData, Response response) {
+				Status status = thermostatData.getStatus();
+				Thermostat[] thermostats = thermostatData.getThermostatList();
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+
+			}
+		});
 	}
 }
