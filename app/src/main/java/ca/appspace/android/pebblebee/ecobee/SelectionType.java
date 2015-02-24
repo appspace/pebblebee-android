@@ -8,7 +8,8 @@ public enum SelectionType {
     NONE("none"),
     THERMOSTATS("thermostats"),
     USERS("user"),
-    MANAGEMENT_SET("managementSet");
+    MANAGEMENT_SET("managementSet"),
+	REGISTERED("registered");
 
     private final String textValue;
 

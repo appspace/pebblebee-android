@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created by Eugene on 2015-02-19.
  */
-public class ApiRequest implements Serializable {
+public class ApiRequest implements ApiInfoObject {
 
     private Selection selection;
     private Page page;
