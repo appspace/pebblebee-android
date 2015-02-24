@@ -1,4 +1,4 @@
-package ca.appspace.android.pebblebee;
+package ca.appspace.android.pebblebee.ecobee;
 
 import android.app.Service;
 import android.content.Intent;
@@ -7,18 +7,22 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.ecobee.api.retrofit.AuthorizeResponse;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.util.concurrent.locks.ReentrantLock;
+import ca.appspace.android.pebblebee.ApplicationPreferences;
 
-import ca.appspace.android.pebblebee.ecobee.ApiRequest;
-import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
-import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
-import ca.appspace.android.pebblebee.ecobee.SelectionType;
-import ca.appspace.android.pebblebee.ecobee.SelectionTypeJsonAdapter;
-import ca.appspace.android.pebblebee.ecobee.ThermostatData;
-import ca.appspace.android.pebblebee.ecobee.TokenResponse;
+import com.ecobee.api.retrofit.ApiError;
+import com.ecobee.api.retrofit.ApiRequest;
+
+import com.ecobee.api.retrofit.EcobeeAPI;
+import com.ecobee.api.retrofit.SelectionType;
+import com.ecobee.api.retrofit.adapter.SelectionTypeJsonAdapter;
+import com.ecobee.api.retrofit.ThermostatData;
+import com.ecobee.api.retrofit.ThermostatSummary;
+import com.ecobee.api.retrofit.TokenResponse;
+
 import retrofit.Callback;
 import retrofit.RequestInterceptor;
 import retrofit.RetrofitError;
@@ -47,20 +51,18 @@ public class AuthApiWrapper extends Service implements EcobeeAPI<ApiRequest> {
 			.create();
 
 	public class LocalBinder extends Binder {
-		AuthApiWrapper getService() {
+		public AuthApiWrapper getService() {
 			return AuthApiWrapper.this;
 		}
 	}
 
-
 	@Override
-	public void authorize(String responseType, String clientId, String scope, Callback<AuthorizeResponse> callback) {
+	public void authorize(@Query("response_type") String responseType, @Query("client_id") String clientId, @Query("scope") String scope, Callback<AuthorizeResponse> callback) {
 
 	}
 
 	@Override
-	public void token(String grantType, String authCode,
-	                  String clientId, Callback<TokenResponse> callback) {
+	public void token(@Query("grant_type") String grantType, @Query("code") String authCode, @Query("client_id") String clientId, Callback<TokenResponse> callback) {
 
 	}
 
@@ -79,15 +81,40 @@ public class AuthApiWrapper extends Service implements EcobeeAPI<ApiRequest> {
 		});
 	}
 
+	@Override
+	public void getThermostatSummary(final ApiRequest request, final Callback<ThermostatSummary> callback) {
+		refreshTokenIfRequired(new Callback<Void>() {
+			@Override
+			public void success(Void aVoid, Response response) {
+				_api.getThermostatSummary(gson.toJson(request), new Callback<ThermostatSummary>() {
+					@Override
+					public void success(ThermostatSummary thermostatSummary, Response response) {
+						callback.success(thermostatSummary, response);
+					}
+
+					@Override
+					public void failure(RetrofitError error) {
+						callback.failure(error);
+					}
+				});
+			}
+
+			@Override
+			public void failure(RetrofitError error) {
+				callback.failure(error);
+			}
+		});
+	}
+
 	private void refreshTokenIfRequired(final Callback<Void> tokenReadyCallback) {
 		Log.d(TAG, "Checking if refresh token is required");
 		if (_oauthExpiresIn<1 || System.currentTimeMillis()>_oauthExpiresIn) {
 			Log.d(TAG, "Requesting new code as previous has expired");
 			try {
-				_insecuredApi.token("refresh_token", _oauthRefreshCode, EcobeeAPI.API_KEY, new Callback<TokenResponse>() {
+				_insecuredApi.token("refresh_token", _oauthRefreshCode, ApplicationPreferences.ECOBEE_API_KEY, new Callback<TokenResponse>() {
 					@Override
 					public void success(TokenResponse tokenResponse, Response response) {
-						_oauthExpiresIn = System.currentTimeMillis() + tokenResponse.getExpiresIn() * 60 * 1000;
+						_oauthExpiresIn = System.currentTimeMillis() + (tokenResponse.getExpiresIn() * 60 * 1000);
 						_oauthCode = tokenResponse.getAccessToken();
 						_oauthRefreshCode = tokenResponse.getRefreshToken();
 						Log.d(TAG, "New access token loaded: " + _oauthCode);
@@ -96,6 +123,12 @@ public class AuthApiWrapper extends Service implements EcobeeAPI<ApiRequest> {
 
 					@Override
 					public void failure(RetrofitError error) {
+						try {
+							ApiError bodyStr = (ApiError) error.getBodyAs(ApiError.class);
+						} catch (RuntimeException e) {
+							Log.e(TAG, "Error converting error response", e);
+						}
+
 						Log.e(TAG, "Error refreshing code " + error.getResponse().getReason());
 						if (tokenReadyCallback!=null) tokenReadyCallback.failure(error);
 					}

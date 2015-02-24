@@ -7,6 +7,8 @@ import java.util.UUID;
  */
 public class ApplicationPreferences {
 
+	public final static String ECOBEE_API_KEY = "anMH4MUjBVKEaUhlum2K315xC6oH4uP2";
+
 	public final static UUID PEBBLE_APP_ID = UUID.fromString("1fd52557-d796-4489-bdc7-cdd100c95d16");
 
     public static final String KEY_OAUTH_CODE = "KEY_OAUTH_CODE";

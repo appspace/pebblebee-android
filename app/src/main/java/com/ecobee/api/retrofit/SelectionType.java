@@ -1,4 +1,4 @@
-package ca.appspace.android.pebblebee.ecobee;
+package com.ecobee.api.retrofit;
 
 /**
  * Created by Eugene on 2015-02-19.

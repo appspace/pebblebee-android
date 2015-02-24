@@ -1,4 +1,4 @@
-package ca.appspace.android.pebblebee.ecobee;
+package com.ecobee.api.retrofit;
 
 import android.os.Parcel;
 import android.os.Parcelable;

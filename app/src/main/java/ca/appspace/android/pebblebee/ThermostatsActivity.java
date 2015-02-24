@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,13 +14,13 @@ import android.widget.LinearLayout;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import ca.appspace.android.pebblebee.ecobee.ApiRequest;
-import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
-import ca.appspace.android.pebblebee.ecobee.Selection;
-import ca.appspace.android.pebblebee.ecobee.SelectionType;
-import ca.appspace.android.pebblebee.ecobee.Status;
-import ca.appspace.android.pebblebee.ecobee.Thermostat;
-import ca.appspace.android.pebblebee.ecobee.ThermostatData;
+import com.ecobee.api.retrofit.ApiRequest;
+import com.ecobee.api.retrofit.Selection;
+import com.ecobee.api.retrofit.SelectionType;
+import com.ecobee.api.retrofit.Status;
+import com.ecobee.api.retrofit.ThermostatSummary;
+
+import ca.appspace.android.pebblebee.ecobee.AuthApiWrapper;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
@@ -72,23 +71,23 @@ public class ThermostatsActivity extends ActionBarActivity {
 		}
 		ApiRequest request = new ApiRequest();
 		request.setSelection(new Selection());
-		request.getSelection().setSelectionType(SelectionType.THERMOSTATS);
-		request.getSelection().setSelectionMatch("xxxxxxxxxxx");    //<-Id of your thermostat here
-		request.getSelection().setIncludeDevice(true);
-		request.getSelection().setIncludeEvents(true);
-		request.getSelection().setIncludeRuntime(true);
+		request.getSelection().setSelectionType(SelectionType.REGISTERED);
+		request.getSelection().setSelectionMatch("");
 
-		_service.getThermostats(request, new Callback<ThermostatData>() {
+		_service.getThermostatSummary(request, new Callback<ThermostatSummary>() {
 			@Override
-			public void success(ThermostatData thermostatData, Response response) {
-
+			public void success(ThermostatSummary thermostatData, Response response) {
 				Status status = thermostatData.getStatus();
-				Thermostat[] thermostats = thermostatData.getThermostatList();
+				Integer count = thermostatData.getThermostatCount();
+				String[] revisionList = thermostatData.getRevisionList();
+				String[] statusList = thermostatData.getStatusList();
 			}
 
 			@Override
 			public void failure(RetrofitError error) {
-				Log.e(TAG, "Error loading thermostats: "+error.getResponse().getReason());
+				String reason = error.getResponse().getReason();
+				Log.e(TAG, "Error loading thermostats: " + reason);
+
 			}
 		});
 	}

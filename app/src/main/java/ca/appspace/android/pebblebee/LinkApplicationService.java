@@ -9,9 +9,11 @@ import android.util.Log;
 
 import org.apache.http.HttpStatus;
 
-import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
-import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
-import ca.appspace.android.pebblebee.ecobee.TokenResponse;
+import com.ecobee.api.retrofit.AuthorizeResponse;
+import com.ecobee.api.retrofit.EcobeeAPI;
+import com.ecobee.api.retrofit.TokenResponse;
+
+import ca.appspace.android.pebblebee.ecobee.RemoteServiceFactory;
 import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;

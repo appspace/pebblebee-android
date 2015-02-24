@@ -1,6 +1,4 @@
-package ca.appspace.android.pebblebee.ecobee;
-
-import java.io.Serializable;
+package com.ecobee.api.retrofit;
 
 /**
  * Created by Eugene on 2015-02-19.

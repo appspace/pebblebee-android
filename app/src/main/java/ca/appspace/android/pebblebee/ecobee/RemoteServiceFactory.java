@@ -1,25 +1,18 @@
-package ca.appspace.android.pebblebee;
+package ca.appspace.android.pebblebee.ecobee;
 
 import android.content.Context;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 
-import java.io.IOException;
-
-import ca.appspace.android.pebblebee.ecobee.ApiRequest;
-import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
-import ca.appspace.android.pebblebee.ecobee.Selection;
-import ca.appspace.android.pebblebee.ecobee.SelectionType;
-import ca.appspace.android.pebblebee.ecobee.SelectionTypeJsonAdapter;
-import retrofit.ErrorHandler;
+import com.ecobee.api.retrofit.ApiRequest;
+import com.ecobee.api.retrofit.EcobeeAPI;
+import com.ecobee.api.retrofit.Selection;
+import com.ecobee.api.retrofit.SelectionType;
+import com.ecobee.api.retrofit.adapter.SelectionTypeJsonAdapter;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
-import retrofit.RetrofitError;
 import retrofit.client.OkClient;
 import retrofit.converter.GsonConverter;
 

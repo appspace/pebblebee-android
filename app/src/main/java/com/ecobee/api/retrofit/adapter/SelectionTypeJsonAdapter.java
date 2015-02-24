@@ -1,5 +1,6 @@
-package ca.appspace.android.pebblebee.ecobee;
+package com.ecobee.api.retrofit.adapter;
 
+import com.ecobee.api.retrofit.SelectionType;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;

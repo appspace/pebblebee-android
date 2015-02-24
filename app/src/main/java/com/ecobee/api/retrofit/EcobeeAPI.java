@@ -1,16 +1,19 @@
-package ca.appspace.android.pebblebee.ecobee;
+package com.ecobee.api.retrofit;
 
 import java.io.Serializable;
 
 import retrofit.Callback;
 import retrofit.http.GET;
 import retrofit.http.POST;
-import retrofit.http.Path;
 import retrofit.http.Query;
 
+/**
+ *
+ * @param <R> type of ApiRequest - String.class or ApiRequest.class
+ */
 public interface EcobeeAPI<R extends Serializable> {
 
-    final static String API_KEY = "anMH4MUjBVKEaUhlum2K315xC6oH4uP2";
+
     final static long PIN_MAX_LIFE = 10*60*1000;    //10 minutes
 
     //'https://api.ecobee.com/authorize?response_type=ecobeePin&client_id=APPLICATION_KEY&scope=smartWrite'

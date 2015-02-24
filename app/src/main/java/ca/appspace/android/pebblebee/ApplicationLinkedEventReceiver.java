@@ -5,8 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
-import ca.appspace.android.pebblebee.ecobee.TokenResponse;
+import com.ecobee.api.retrofit.AuthorizeResponse;
+import com.ecobee.api.retrofit.TokenResponse;
 
 public abstract class ApplicationLinkedEventReceiver extends BroadcastReceiver {
 

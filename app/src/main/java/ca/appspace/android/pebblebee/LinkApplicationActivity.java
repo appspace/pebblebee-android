@@ -12,9 +12,9 @@ import android.widget.TextView;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import ca.appspace.android.pebblebee.ecobee.AuthorizeResponse;
-import ca.appspace.android.pebblebee.ecobee.EcobeeAPI;
-import ca.appspace.android.pebblebee.ecobee.TokenResponse;
+import com.ecobee.api.retrofit.AuthorizeResponse;
+import com.ecobee.api.retrofit.EcobeeAPI;
+import com.ecobee.api.retrofit.TokenResponse;
 
 public class LinkApplicationActivity extends FragmentActivity {
 
@@ -81,7 +81,8 @@ public class LinkApplicationActivity extends FragmentActivity {
             resp.setCode(generatedCode);
             resp.setExpiresIn(Long.valueOf(EcobeeAPI.PIN_MAX_LIFE - (System.currentTimeMillis() - generatedAt)).intValue());
 
-            Intent intent = LinkApplicationService.createPollIntent(this, resp, EcobeeAPI.API_KEY, EcobeeAPI.PIN_MAX_LIFE);
+            Intent intent = LinkApplicationService.createPollIntent(this, resp,
+		            ApplicationPreferences.ECOBEE_API_KEY, EcobeeAPI.PIN_MAX_LIFE);
             startService(intent);
         } else {
             requestNewCode();
@@ -109,7 +110,8 @@ public class LinkApplicationActivity extends FragmentActivity {
     private void requestNewCode() {
         Log.d(TAG, "Requesting new link code");
         //Start loading code
-        Intent createNewCodeIntent = LinkApplicationService.createNewLinkCodeReqIntent(this, EcobeeAPI.API_KEY);
+        Intent createNewCodeIntent = LinkApplicationService.createNewLinkCodeReqIntent(this,
+		        ApplicationPreferences.ECOBEE_API_KEY);
         startService(createNewCodeIntent);
 
         //Let user know code is being loaded
