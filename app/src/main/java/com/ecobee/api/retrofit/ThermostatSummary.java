@@ -3,6 +3,8 @@ package com.ecobee.api.retrofit;
 import com.ecobee.api.retrofit.ApiInfoObject;
 import com.ecobee.api.retrofit.Status;
 
+import java.io.Serializable;
+
 /**
  * Created by eugene on 2015-02-22.
  */
@@ -10,7 +12,9 @@ public class ThermostatSummary implements ApiInfoObject {
 
 	private Status status;
 	private Integer thermostatCount;
+
 	private String[] revisionList;
+
 	private String[] statusList;
 
 	public Status getStatus() {
@@ -44,4 +48,5 @@ public class ThermostatSummary implements ApiInfoObject {
 	public void setStatusList(String[] statusList) {
 		this.statusList = statusList;
 	}
+
 }

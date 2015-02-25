@@ -42,7 +42,7 @@ public interface EcobeeAPI<R extends Serializable> {
 
 	@GET("/1/thermostatSummary")
 	public void getThermostatSummary(
-			@Query("json")R request,
+			@Query("json") R request,
 	        Callback<ThermostatSummary> callback);
 
 }

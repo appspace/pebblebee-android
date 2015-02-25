@@ -25,7 +25,6 @@ import retrofit.Callback;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
-
 public class ThermostatsActivity extends ActionBarActivity {
 
 	private static final String TAG = ThermostatsActivity.class.getSimpleName();
