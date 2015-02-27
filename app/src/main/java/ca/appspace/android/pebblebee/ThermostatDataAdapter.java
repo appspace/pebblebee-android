@@ -18,16 +18,20 @@ import java.util.List;
 public class ThermostatDataAdapter extends ArrayAdapter<CsvRevision> {
 
     public ThermostatDataAdapter(Context context) {
-        super(context, android.R.layout.simple_list_item_1);
+        super(context, R.layout.thermostat_list_entry);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View element = super.getView(position, convertView, parent);
         CsvRevision thermostat = getItem(position);
-        TextView text = (TextView) element.findViewById(android.R.id.text1);
-        if (text!=null) {
-            text.setText(thermostat.getThermostatName());
+        TextView firstLine = (TextView) element.findViewById(R.id.firstLine);
+        if (firstLine!=null) {
+            firstLine.setText(thermostat.getThermostatName());
+        }
+        TextView secondLine = (TextView) element.findViewById(R.id.secondLine);
+        if (secondLine!=null) {
+            secondLine.setText(thermostat.getThermostatId());
         }
         return element;
     }
