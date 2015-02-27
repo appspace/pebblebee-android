@@ -33,10 +33,6 @@
             android:name=".LinkApplicationActivity"
             android:label="@string/title_activity_link_application" >
         </activity>
-        <activity
-            android:name=".ThermostatsActivity"
-            android:label="@string/title_activity_thermostats" >
-        </activity>
         <activity android:name=".DisplayMyThermostatsActivity"
             android:label="@string/title_activity_thermostats">
         </activity>
