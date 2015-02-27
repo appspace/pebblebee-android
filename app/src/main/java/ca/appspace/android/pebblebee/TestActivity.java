@@ -139,7 +139,7 @@ public class TestActivity extends ActionBarActivity {
 			Log.d(TAG, "OAuth code available, continuing to ThermostatActivity.");
 			_linkAppBtn.setVisibility(View.INVISIBLE);
 			_linkAppBtn.setEnabled(false);
-			startActivity(new Intent(this, ThermostatsActivity.class));
+			startActivity(new Intent(this, DisplayMyThermostatsActivity.class));
 		} else {
 			Log.d(TAG, "OAuth code is not available, application is not linked.");
 			_linkAppBtn.setVisibility(View.VISIBLE);

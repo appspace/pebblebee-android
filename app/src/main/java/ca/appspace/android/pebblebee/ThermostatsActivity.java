@@ -69,9 +69,9 @@ public class ThermostatsActivity extends ActionBarActivity {
 			Log.w(TAG, "Service is not bound - requests are not available");
 		}
 		ApiRequest request = new ApiRequest();
-		request.setSelection(new Selection());
-		request.getSelection().setSelectionType(SelectionType.REGISTERED);
-		request.getSelection().setSelectionMatch("");
+        request.setSelection(new Selection());
+        request.getSelection().setSelectionType(SelectionType.REGISTERED);
+        request.getSelection().setSelectionMatch("");
 
 		_service.getThermostatSummary(request, new Callback<ThermostatSummary>() {
 			@Override

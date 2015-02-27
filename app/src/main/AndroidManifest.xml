@@ -25,7 +25,7 @@
             android:exported="false" >
         </service>
 
-        <service android:name=".AuthApiWrapper"
+        <service android:name=".ecobee.AuthApiWrapper"
             android:enabled="true"
             android:exported="false"></service>
 
@@ -36,6 +36,9 @@
         <activity
             android:name=".ThermostatsActivity"
             android:label="@string/title_activity_thermostats" >
+        </activity>
+        <activity android:name=".DisplayMyThermostatsActivity"
+            android:label="@string/title_activity_thermostats">
         </activity>
     </application>
 
