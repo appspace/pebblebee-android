@@ -104,7 +104,7 @@ public class LinkApplicationActivity extends FragmentActivity {
 				System.currentTimeMillis() + (token.getExpiresIn() * 60 * 1000));
 		prefsEditor.commit();
 
-		startActivity(new Intent(this, ThermostatsActivity.class));
+		startActivity(new Intent(this, DisplayMyThermostatsActivity.class));
 	}
 
     private void requestNewCode() {
