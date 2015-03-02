@@ -2,6 +2,7 @@ package ca.appspace.android.pebblebee.ecobee;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -117,6 +118,12 @@ public class AuthApiWrapper extends Service implements EcobeeAPI<ApiRequest> {
 						_oauthExpiresIn = System.currentTimeMillis() + (tokenResponse.getExpiresIn() * 60 * 1000);
 						_oauthCode = tokenResponse.getAccessToken();
 						_oauthRefreshCode = tokenResponse.getRefreshToken();
+						SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(AuthApiWrapper.this).edit();
+						editor.putString(ApplicationPreferences.KEY_OAUTH_CODE, _oauthCode);
+						editor.putString(ApplicationPreferences.KEY_OAUTH_REFRESH_CODE, _oauthRefreshCode);
+						editor.putLong(ApplicationPreferences.KEY_OAUTH_CODE_EXPIRES_IN, _oauthExpiresIn);
+						editor.commit();
+
 						Log.d(TAG, "New access token loaded: " + _oauthCode);
 						if (tokenReadyCallback!=null) tokenReadyCallback.success(null, response);
 					}
