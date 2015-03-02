@@ -18,7 +18,7 @@ import java.util.List;
 public class ThermostatDataAdapter extends ArrayAdapter<CsvRevision> {
 
     public ThermostatDataAdapter(Context context) {
-        super(context, R.layout.thermostat_list_entry);
+        super(context, R.layout.thermostat_list_entry, R.id.firstLine);
     }
 
     @Override

@@ -89,11 +89,7 @@ public class DisplayMyThermostatsActivity extends ListActivity {
         _service.getThermostatSummary(request, new Callback<ThermostatSummary>() {
             @Override
             public void success(ThermostatSummary thermostatData, Response response) {
-                Status status = thermostatData.getStatus();
-                Integer count = thermostatData.getThermostatCount();
-                String[] revisionList = thermostatData.getRevisionList();
-                String[] statusList = thermostatData.getStatusList();
-
+	            _dataAdapter.clear();
                 _dataAdapter.addAll(ThermostatSummaryTranslator.getThermostats(thermostatData));
             }
 
@@ -101,7 +97,6 @@ public class DisplayMyThermostatsActivity extends ListActivity {
             public void failure(RetrofitError error) {
                 String reason = error.getResponse().getReason();
                 Log.e(TAG, "Error loading thermostats: " + reason);
-
             }
         });
 
@@ -110,8 +105,11 @@ public class DisplayMyThermostatsActivity extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
+	    CsvRevision thermostat = _dataAdapter.getItem(position);
         Toast.makeText(DisplayMyThermostatsActivity.this,
-                "Item at position "+position+" clicked",
+                "Thermostat '"+thermostat.getThermostatName()+"' clicked",
                 Toast.LENGTH_SHORT).show();
+	    Intent next = ThermostatDetailsActivity.makeThermostatDetailsActivityIntent(this, thermostat);
+	    startActivity(next);
     }
 }

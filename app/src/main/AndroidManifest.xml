@@ -24,17 +24,26 @@
             android:name=".LinkApplicationService"
             android:exported="false" >
         </service>
-
-        <service android:name=".ecobee.AuthApiWrapper"
+        <service
+            android:name=".ecobee.AuthApiWrapper"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <activity
             android:name=".LinkApplicationActivity"
             android:label="@string/title_activity_link_application" >
         </activity>
-        <activity android:name=".DisplayMyThermostatsActivity"
-            android:label="@string/title_activity_thermostats">
+        <activity
+            android:name=".DisplayMyThermostatsActivity"
+            android:label="@string/title_activity_thermostats" >
+        </activity>
+        <activity
+            android:name=".ThermostatDetailsActivity"
+            android:label="@string/title_activity_thermostat_details"
+            android:parentActivityName=".DisplayMyThermostatsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="ca.appspace.android.pebblebee.DisplayMyThermostatsActivity" />
         </activity>
     </application>
 

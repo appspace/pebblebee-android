@@ -10,5 +10,8 @@
     <string name="link_code_expires">This code expires in:</string>
     <string name="title_activity_thermostats">Your Thermostats</string>
     <string name="label_reload_thermostats">Reload Thermostats</string>
+    <string name="title_activity_thermostat_details">ThermostatDetailsActivity</string>
+
+    <string name="hello_world">Hello world!</string>
 
 </resources>
