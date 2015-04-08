@@ -35,14 +35,18 @@ public interface EcobeeAPI<R extends Serializable> {
             Callback<TokenResponse> callback
             );
 
+    /**
+     * @see https://www.ecobee.com/home/developer/api/documentation/v1/operations/get-thermostat-summary.shtml
+     */
+    @GET("/1/thermostatSummary")
+    public void getThermostatSummary(
+            @Query("json") R request,
+            Callback<ThermostatSummary> callback);
+
     @GET("/1/thermostat")
     public void getThermostats(
             @Query("json") R request,
             Callback<ThermostatData> callback);
 
-	@GET("/1/thermostatSummary")
-	public void getThermostatSummary(
-			@Query("json") R request,
-	        Callback<ThermostatSummary> callback);
 
 }

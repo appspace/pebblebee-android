@@ -37,6 +37,7 @@ public class Thermostat implements Serializable {
 	private ThermostatPrivacy privacy;
 	private Version version;
 	private SecuritySettings securitySettings;
+    private RemoteSensor[] remoteSensors;
 
 	public Thermostat() {
 	}
@@ -272,4 +273,12 @@ public class Thermostat implements Serializable {
 	public void setSecuritySettings(SecuritySettings securitySettings) {
 		this.securitySettings = securitySettings;
 	}
+
+    public RemoteSensor[] getRemoteSensors() {
+        return remoteSensors;
+    }
+
+    public void setRemoteSensors(RemoteSensor[] remoteSensors) {
+        this.remoteSensors = remoteSensors;
+    }
 }
